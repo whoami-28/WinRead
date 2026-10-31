@@ -246,7 +246,7 @@ async function handleMessage(message) {
 
       // Sync Operations
       case 'getSyncInfo': {
-        const info = syncServer ? await syncServer.getInfo() : null;
+        const info = syncServer ? await syncServer.getInfo(payload?.preferredIp) : null;
         const adbStatus = await adbBridge.checkAdbAvailable();
         const adbDevices = adbStatus.available ? await adbBridge.getConnectedDevices() : [];
         const mtpDevices = await mtpBridge.detectDevices();
@@ -259,6 +259,13 @@ async function handleMessage(message) {
             devices: mtpDevices
           }
         }, correlationId);
+        break;
+      }
+
+      case 'connectAdbWireless': {
+        const ip = payload?.ip;
+        const result = await adbBridge.connectWireless(ip);
+        sendToMain('connectAdbWireless:response', result, correlationId);
         break;
       }
 

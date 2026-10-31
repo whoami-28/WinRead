@@ -60,23 +60,36 @@
           <div class="sidebar-version-badge">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
             <span data-i18n="catalog_subtitle">Каталог</span>
-            <span class="version-num">v1.0.0</span>
+            <span class="version-num">v1.1.0</span>
           </div>
         </div>
 
-        <!-- Sidebar Navigation Menu -->
+        <!-- Sidebar Navigation Menu with Category Counts -->
         <nav class="sidebar-menu">
-          <button class="sidebar-item active" data-nav="library" id="navLibrary">
+          <button class="sidebar-item active" data-nav="all" id="navAll">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-            <span class="nav-text" data-i18n="nav_library">Библиотека</span>
+            <span class="nav-text" data-i18n="nav_library">Все книги</span>
+            <span class="sidebar-count" id="countAll">0</span>
           </button>
           <button class="sidebar-item" data-nav="reading" id="navReading">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
-            <span class="nav-text" data-i18n="nav_reading">Сейчас читаю</span>
+            <span class="nav-text" data-i18n="nav_reading">Читаю сейчас</span>
+            <span class="sidebar-count" id="countReading">0</span>
+          </button>
+          <button class="sidebar-item" data-nav="to_read" id="navToRead">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span class="nav-text" data-i18n="tab_to_read">Хочу прочитать</span>
+            <span class="sidebar-count" id="countToRead">0</span>
+          </button>
+          <button class="sidebar-item" data-nav="have_read" id="navHaveRead">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <span class="nav-text" data-i18n="tab_have_read">Прочитано</span>
+            <span class="sidebar-count" id="countHaveRead">0</span>
           </button>
           <button class="sidebar-item" data-nav="favorites" id="navFavorites">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
             <span class="nav-text" data-i18n="nav_favorites">Избранное</span>
+            <span class="sidebar-count" id="countFavorites">0</span>
           </button>
           <button class="sidebar-item" data-nav="authors" id="navAuthors">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
@@ -197,67 +210,7 @@
             </div>
           </div>
 
-          <!-- Status Filter Tabs & Sorting Row -->
-          <div class="filter-controls-bar">
-            <div class="status-tabs-pill">
-              <button class="status-tab-btn active" data-tab="all">
-                <span data-i18n="tab_all">Все книги</span> <span class="tab-count" id="countAll">(0)</span>
-              </button>
-              <button class="status-tab-btn" data-tab="reading">
-                <span data-i18n="tab_reading">Читаю сейчас</span> <span class="tab-count" id="countReading">(0)</span>
-              </button>
-              <button class="status-tab-btn" data-tab="to_read">
-                <span data-i18n="tab_to_read">Хочу прочитать</span> <span class="tab-count" id="countToRead">(0)</span>
-              </button>
-              <button class="status-tab-btn" data-tab="have_read">
-                <span data-i18n="tab_have_read">Прочитано</span> <span class="tab-count" id="countHaveRead">(0)</span>
-              </button>
-              <button class="status-tab-btn" data-tab="favorites">
-                <span>❤ Изб.</span> <span class="tab-count" id="countFavorites">(0)</span>
-              </button>
-            </div>
-
-            <div class="filter-right-options">
-              <div class="sort-select-wrap">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="7" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="21" y1="18" x2="7" y2="18"></line></svg>
-                <select id="sortSelect" class="sort-select">
-                  <option value="last_read" selected>По дате чтения</option>
-                  <option value="title">По названию</option>
-                  <option value="author">По автору</option>
-                  <option value="progress">По прогрессу</option>
-                </select>
-              </div>
-
-              <div class="view-mode-toggle">
-                <button class="view-toggle-btn active" id="viewModeGrid" title="Сетка">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                </button>
-                <button class="view-toggle-btn" id="viewModeList" title="Список">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Format Filter Chips Row -->
-          <div class="format-chips-row">
-            <div class="format-chips-left">
-              <span class="format-chips-label" data-i18n="formats_label">ФОРМАТЫ:</span>
-              <button class="format-chip active" data-format="all">Все <span id="fmtAllCount">(0)</span></button>
-              <button class="format-chip" data-format="fb2">FB2 <span id="fmtFb2Count">(0)</span></button>
-              <button class="format-chip" data-format="epub">EPUB <span id="fmtEpubCount">(0)</span></button>
-              <button class="format-chip" data-format="pdf">PDF <span id="fmtPdfCount">(0)</span></button>
-              <button class="format-chip" data-format="txt">TXT / MOBI <span id="fmtOtherCount">(0)</span></button>
-            </div>
-            <div class="format-chips-right">
-              <span class="last-sync-time" id="lastSyncTimeText">Синхронизировано: 2 мин назад</span>
-              <button class="sync-refresh-btn" id="syncRefreshBtn" title="Обновить синхронизацию">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- Books Grid Scroll Area -->
+          <!-- Books Grid Scroll Area (Clean Minimalist Library Layout) -->
           <div class="library-scroll-area">
             <div id="booksGrid" class="books-grid">
               <!-- Dynamically populated book cards with bookmark ribbons -->
@@ -310,7 +263,7 @@
                 <span class="meta-sep">•</span>
                 <span class="meta-tag">Посл. синхронизация: <strong id="hubLastSync">2 мин назад</strong></span>
                 <span class="meta-sep">•</span>
-                <span class="meta-tag text-muted">WinRead bridge v1.0.0-rev3</span>
+                <span class="meta-tag text-muted">WinRead bridge v1.1.0</span>
               </div>
             </div>
 
@@ -418,6 +371,10 @@
                   <!-- Scannable authentic QR code inserted here -->
                 </div>
                 <div class="qr-meta-box">
+                  <div class="qr-adapter-row" style="margin-bottom: 8px;">
+                    <label style="font-size: 0.68rem; color: var(--text-muted); display: block; margin-bottom: 4px; font-weight: 600;">СЕТЕВОЙ АДАПТЕР (WI-FI / LAN):</label>
+                    <select id="hubAdapterSelect" class="sort-select" style="width: 100%; height: 28px; font-size: 0.75rem; background: var(--bg-tertiary); color: var(--text-primary); border-radius: 4px; border: 1px solid var(--border-subtle); padding: 0 6px;"></select>
+                  </div>
                   <label class="qr-meta-label">COMPANION SERVER URL</label>
                   <div class="qr-url-badge" id="hubPrimaryUrl">http://192.168.1.145:8765</div>
                   <div class="qr-port-tag">
@@ -474,6 +431,42 @@
                   <span>Синхронизация коллекций:</span>
                   <strong class="rules-val green">Включено</strong>
                 </div>
+              </div>
+            </div>
+
+            <!-- Channel 04: Bluetooth Exchange -->
+            <div class="channel-card">
+              <div class="channel-card-header">
+                <span class="channel-num">КАНАЛ 04</span>
+                <h4 class="channel-title">Синхронизация по Bluetooth</h4>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"></polyline></svg>
+              </div>
+              <p class="channel-desc">Передача бэкапа ReadEra (.bak) или книги прямо с телефона по Bluetooth без проводов.</p>
+
+              <div class="bluetooth-action-box" style="padding: 14px; background: var(--bg-tertiary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px;">
+                <div>
+                  <div style="font-weight: 600; font-size: 0.82rem; color: var(--text-primary);">Приём файлов Windows Bluetooth</div>
+                  <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">На телефоне: «Поделиться файлом .bak → Bluetooth → Выбрать ваш ПК»</div>
+                </div>
+                <button class="btn btn-secondary btn-sm" id="hubBluetoothReceiveBtn" style="white-space: nowrap;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"></polyline></svg>
+                  <span>Принять файл</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Channel 05: Wireless ADB -->
+            <div class="channel-card">
+              <div class="channel-card-header">
+                <span class="channel-num">КАНАЛ 05</span>
+                <h4 class="channel-title">Беспроводной Android (ADB over Wi-Fi)</h4>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><path d="M12 18h.01"></path></svg>
+              </div>
+              <p class="channel-desc">Подключение к телефону по воздуху без кабеля (Android: Настройки → Для разработчиков → Беспроводная отладка).</p>
+
+              <div style="display: flex; gap: 8px; margin-top: 10px;">
+                <input type="text" id="hubAdbWirelessInput" class="header-search-input" style="flex: 1; height: 32px; padding: 0 10px;" placeholder="192.168.100.x:5555" />
+                <button class="btn btn-secondary btn-sm" id="hubAdbWirelessBtn" style="white-space: nowrap;">Подключить</button>
               </div>
             </div>
           </div>
@@ -539,6 +532,13 @@
               <line x1="3" y1="6" x2="3.01" y2="6"></line>
               <line x1="3" y1="12" x2="3.01" y2="12"></line>
               <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+          </button>
+
+          <button id="viewSpreadBtn" class="icon-btn" title="Режим разворота книги (B)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
             </svg>
           </button>
 
@@ -651,11 +651,33 @@
 
     <!-- Table of Contents Modal -->
     <div id="tocModal" class="modal hidden">
-      <div class="modal-card">
+      <div class="modal-card toc-card">
         <div class="modal-header">
-          <h3 data-i18n="toc_title">Оглавление</h3>
+          <div class="modal-header-title-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            <div>
+              <h3 data-i18n="toc_title">Оглавление</h3>
+              <div class="toc-book-subtitle" id="tocBookSubtitle">Книга</div>
+            </div>
+          </div>
           <button class="close-modal-btn" data-close="tocModal">&times;</button>
         </div>
+
+        <div class="toc-search-bar">
+          <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="tocSearchInput" class="toc-search-input" placeholder="Поиск по главам..." />
+        </div>
+
         <div id="tocList" class="toc-list">
           <!-- Chapter entries -->
         </div>

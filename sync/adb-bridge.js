@@ -142,6 +142,21 @@ class AdbBridge {
       });
     });
   }
+
+  async connectWireless(deviceAddress) {
+    if (!deviceAddress) return { success: false, error: 'IP адрес не указан' };
+    const target = deviceAddress.includes(':') ? deviceAddress : `${deviceAddress}:5555`;
+    return new Promise((resolve) => {
+      exec(`"${this.adbPath}" connect ${target}`, { timeout: 8000 }, (err, stdout, stderr) => {
+        if (err) {
+          resolve({ success: false, error: err.message, output: stdout });
+        } else {
+          const success = stdout.toLowerCase().includes('connected to');
+          resolve({ success, output: (stdout || stderr).trim() });
+        }
+      });
+    });
+  }
 }
 
 module.exports = { AdbBridge };

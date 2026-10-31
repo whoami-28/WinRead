@@ -204,3 +204,12 @@ ipcMain.handle('dialog:openReadEraBackup', async () => {
   }
   return result.filePaths[0];
 });
+
+ipcMain.handle('sync:openBluetoothReceive', async () => {
+  const { exec } = require('child_process');
+  return new Promise((resolve) => {
+    exec('fsquirt.exe -receive', (err) => {
+      resolve({ success: !err });
+    });
+  });
+});

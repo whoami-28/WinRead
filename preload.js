@@ -34,8 +34,10 @@ contextBridge.exposeInMainWorld('winread', {
   addQuote: (quote) => ipcRenderer.invoke('worker:request', { action: 'addQuote', payload: quote }),
   deleteQuote: (id) => ipcRenderer.invoke('worker:request', { action: 'deleteQuote', payload: { id } }),
 
-  // Sync Engine (MTP USB, Wi-Fi QR, ADB Bridge, File import)
-  getSyncInfo: () => ipcRenderer.invoke('worker:request', { action: 'getSyncInfo' }),
+  // Sync Engine (MTP USB, Wi-Fi QR, ADB Bridge, Bluetooth, File import)
+  getSyncInfo: (preferredIp = null) => ipcRenderer.invoke('worker:request', { action: 'getSyncInfo', payload: { preferredIp } }),
+  openBluetoothReceive: () => ipcRenderer.invoke('sync:openBluetoothReceive'),
+  connectAdbWireless: (ip) => ipcRenderer.invoke('worker:request', { action: 'connectAdbWireless', payload: { ip } }),
   syncFromMtp: (deviceName = '') => ipcRenderer.invoke('worker:request', { action: 'syncFromMtp', payload: { deviceName } }),
   fetchBookFromPhone: ({ bookId, title, format }) => ipcRenderer.invoke('worker:request', { action: 'fetchBookFromPhone', payload: { bookId, title, format } }),
   associateBookFile: (bookId, filePath) => ipcRenderer.invoke('worker:request', { action: 'associateBookFile', payload: { bookId, filePath } }),

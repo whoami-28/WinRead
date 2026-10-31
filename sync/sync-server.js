@@ -24,24 +24,78 @@ async function generateQrSvg(text) {
 }
 
 /**
- * Get non-internal local IPv4 addresses
+ * Get detailed local IPv4 network adapters sorted by priority (Wi-Fi/LAN first, VPNs last)
  */
-function getLocalIpAddresses() {
+function getLocalNetworkAdapters() {
   const interfaces = os.networkInterfaces();
-  const addresses = [];
+  const adapters = [];
 
   for (const name of Object.keys(interfaces)) {
     for (const iface of interfaces[name]) {
       if (iface.family === 'IPv4' && !iface.internal) {
-        addresses.push(iface.address);
+        const addr = iface.address;
+        const lowerName = name.toLowerCase();
+
+        let priority = 50;
+        let isVirtual = false;
+
+        // Detect VPN & Virtual adapters (Radmin 26.*, Hamachi 25.*, VirtualBox, WSL, etc.)
+        if (
+          lowerName.includes('radmin') ||
+          lowerName.includes('hamachi') ||
+          lowerName.includes('virtual') ||
+          lowerName.includes('vbox') ||
+          lowerName.includes('wsl') ||
+          lowerName.includes('vethernet') ||
+          lowerName.includes('tap') ||
+          lowerName.includes('tun') ||
+          lowerName.includes('docker') ||
+          addr.startsWith('26.') ||
+          addr.startsWith('25.') ||
+          addr.startsWith('169.254.')
+        ) {
+          isVirtual = true;
+          priority = 10;
+        } else if (lowerName.includes('wi-fi') || lowerName.includes('беспровод') || lowerName.includes('wlan') || lowerName.includes('wireless')) {
+          priority = 100; // Wi-Fi is #1 priority for mobile phone camera pairing
+        } else if (addr.startsWith('192.168.')) {
+          priority = 90; // Standard home LAN router subnet
+        } else if (addr.startsWith('10.')) {
+          priority = 80;
+        } else if (addr.startsWith('172.')) {
+          priority = 70;
+        }
+
+        adapters.push({
+          name,
+          address: addr,
+          isVirtual,
+          priority
+        });
       }
     }
   }
 
-  if (addresses.length === 0) {
-    addresses.push('127.0.0.1');
+  // Sort by priority descending
+  adapters.sort((a, b) => b.priority - a.priority);
+
+  if (adapters.length === 0) {
+    adapters.push({
+      name: 'Loopback',
+      address: '127.0.0.1',
+      isVirtual: false,
+      priority: 0
+    });
   }
-  return addresses;
+
+  return adapters;
+}
+
+/**
+ * Get non-internal local IPv4 addresses sorted by priority
+ */
+function getLocalIpAddresses() {
+  return getLocalNetworkAdapters().map(a => a.address);
 }
 
 class SyncServer {
@@ -107,15 +161,21 @@ class SyncServer {
     });
   }
 
-  async getInfo() {
-    const ips = getLocalIpAddresses();
-    const primaryUrl = `http://${ips[0]}:${this.activePort}`;
+  async getInfo(preferredIp = null) {
+    const adapters = getLocalNetworkAdapters();
+    let selectedIp = adapters[0].address;
+    if (preferredIp && adapters.some(a => a.address === preferredIp)) {
+      selectedIp = preferredIp;
+    }
+    const primaryUrl = `http://${selectedIp}:${this.activePort}`;
     const qrSvg = await generateQrSvg(primaryUrl);
     return {
       serverName: 'WinRead Sync Server',
       version: '1.0.0',
       port: this.activePort,
-      ips,
+      selectedIp,
+      adapters,
+      ips: adapters.map(a => a.address),
       primaryUrl,
       qrSvg
     };

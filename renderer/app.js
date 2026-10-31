@@ -161,7 +161,11 @@ class VirtualScroller {
       if (!this.isScrolling) {
         this.isScrolling = true;
         requestAnimationFrame(() => {
-          this.onScroll();
+          if (window.appInstance?.isSpreadMode) {
+            window.appInstance.updateSpreadProgress();
+          } else {
+            this.onScroll();
+          }
           this.isScrolling = false;
         });
       }
@@ -452,9 +456,9 @@ class WinReadApp {
     this.activeChapterIndex = 0;
     this.libraryBooks = [];
     this.activeTab = 'all';
-    this.activeFormat = 'all';
     this.searchQuery = '';
     this.currentLang = localStorage.getItem('winread_lang') || 'ru';
+    this.isSpreadMode = localStorage.getItem('winread_spread_mode') === 'true';
     this.detectedMtpDevice = null;
 
     try { this.initElements(); } catch (e) { console.error('initElements error:', e); }
@@ -508,10 +512,13 @@ class WinReadApp {
     this.progressSlider = document.getElementById('progressSlider');
     this.prevChapterBtn = document.getElementById('prevChapterBtn');
     this.nextChapterBtn = document.getElementById('nextChapterBtn');
+    this.viewSpreadBtn = document.getElementById('viewSpreadBtn');
 
     // Modals & Drawers
     this.tocModal = document.getElementById('tocModal');
     this.tocList = document.getElementById('tocList');
+    this.tocBookSubtitle = document.getElementById('tocBookSubtitle');
+    this.tocSearchInput = document.getElementById('tocSearchInput');
     this.typographyModal = document.getElementById('typographyModal');
     this.drawerOverlay = document.getElementById('drawerOverlay');
     this.drawerBookmarksList = document.getElementById('drawerBookmarksList');
@@ -521,6 +528,10 @@ class WinReadApp {
     this.hubQrContainer = document.getElementById('hubQrContainer');
     this.hubPrimaryUrl = document.getElementById('hubPrimaryUrl');
     this.hubPortStatus = document.getElementById('hubPortStatus');
+    this.hubAdapterSelect = document.getElementById('hubAdapterSelect');
+    this.hubBluetoothReceiveBtn = document.getElementById('hubBluetoothReceiveBtn');
+    this.hubAdbWirelessInput = document.getElementById('hubAdbWirelessInput');
+    this.hubAdbWirelessBtn = document.getElementById('hubAdbWirelessBtn');
     this.hubPhoneName = document.getElementById('hubPhoneName');
     this.hubPhoneOs = document.getElementById('hubPhoneOs');
     this.hubPhoneBaks = document.getElementById('hubPhoneBaks');
@@ -707,16 +718,29 @@ class WinReadApp {
   // ==========================================================================
 
   attachEventListeners() {
-    // Sidebar Navigation
-    document.getElementById('navLibrary')?.addEventListener('click', () => {
+    // Sidebar Navigation with Categories
+    document.getElementById('navAll')?.addEventListener('click', () => {
       this.switchMainView('library');
-      this.setActiveNav('navLibrary');
+      this.setActiveNav('navAll');
+      this.setLibraryTab('all');
     });
 
     document.getElementById('navReading')?.addEventListener('click', () => {
       this.switchMainView('library');
       this.setActiveNav('navReading');
       this.setLibraryTab('reading');
+    });
+
+    document.getElementById('navToRead')?.addEventListener('click', () => {
+      this.switchMainView('library');
+      this.setActiveNav('navToRead');
+      this.setLibraryTab('to_read');
+    });
+
+    document.getElementById('navHaveRead')?.addEventListener('click', () => {
+      this.switchMainView('library');
+      this.setActiveNav('navHaveRead');
+      this.setLibraryTab('have_read');
     });
 
     document.getElementById('navFavorites')?.addEventListener('click', () => {
@@ -752,24 +776,6 @@ class WinReadApp {
       this.appSidebar?.classList.toggle('collapsed');
     });
 
-    // Library Status Tabs
-    document.querySelectorAll('.status-tab-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const tab = e.currentTarget.dataset.tab;
-        this.setLibraryTab(tab);
-      });
-    });
-
-    // Format Chips
-    document.querySelectorAll('.format-chip').forEach(chip => {
-      chip.addEventListener('click', (e) => {
-        document.querySelectorAll('.format-chip').forEach(c => c.classList.remove('active'));
-        e.currentTarget.classList.add('active');
-        this.activeFormat = e.currentTarget.dataset.format;
-        this.renderLibrary();
-      });
-    });
-
     // Search Input
     const searchInput = document.getElementById('librarySearchInput');
     if (searchInput) {
@@ -788,23 +794,6 @@ class WinReadApp {
       }
     });
 
-    // Sort Dropdown
-    document.getElementById('sortSelect')?.addEventListener('change', (e) => {
-      this.sortBooks(e.target.value);
-    });
-
-    // View Mode Toggle (Grid / List)
-    document.getElementById('viewModeGrid')?.addEventListener('click', () => {
-      document.getElementById('viewModeGrid')?.classList.add('active');
-      document.getElementById('viewModeList')?.classList.remove('active');
-      this.booksGrid?.classList.remove('list-view');
-    });
-    document.getElementById('viewModeList')?.addEventListener('click', () => {
-      document.getElementById('viewModeList')?.classList.add('active');
-      document.getElementById('viewModeGrid')?.classList.remove('active');
-      this.booksGrid?.classList.add('list-view');
-    });
-
     // Open Book Buttons
     document.getElementById('openBookBtn')?.addEventListener('click', () => this.handleOpenFileDialog());
     document.getElementById('emptyOpenBtn')?.addEventListener('click', () => this.handleOpenFileDialog());
@@ -813,6 +802,7 @@ class WinReadApp {
     // Reader Toolbar & Chapter Navigation
     document.getElementById('backToLibraryBtn')?.addEventListener('click', () => this.closeReaderAndShowLibrary());
     document.getElementById('tocBtn')?.addEventListener('click', () => this.openTocModal());
+    document.getElementById('viewSpreadBtn')?.addEventListener('click', () => this.toggleSpreadMode());
     document.getElementById('typographyBtn')?.addEventListener('click', () => this.openTypographyModal());
     document.getElementById('bookmarksDrawerBtn')?.addEventListener('click', () => this.openDrawer());
     document.getElementById('addQuickBookmarkBtn')?.addEventListener('click', () => this.addQuickBookmark());
@@ -825,8 +815,13 @@ class WinReadApp {
     // Progress Range Slider
     this.progressSlider?.addEventListener('input', (e) => {
       const pct = parseFloat(e.target.value);
-      const maxScroll = Math.max(0, this.virtualScrollerSizer.offsetHeight - this.viewportContainer.clientHeight);
-      this.viewportContainer.scrollTop = (pct / 100) * maxScroll;
+      if (this.isSpreadMode) {
+        const maxScroll = Math.max(0, this.viewportContainer.scrollWidth - this.viewportContainer.clientWidth);
+        this.viewportContainer.scrollLeft = (pct / 100) * maxScroll;
+      } else {
+        const maxScroll = Math.max(0, this.virtualScrollerSizer.offsetHeight - this.viewportContainer.clientHeight);
+        this.viewportContainer.scrollTop = (pct / 100) * maxScroll;
+      }
     });
 
     // Modal Close Buttons
@@ -903,6 +898,29 @@ class WinReadApp {
       this.showToast('Настройки оформления применены');
     });
 
+    // TOC Search Input
+    this.tocSearchInput?.addEventListener('input', (e) => this.populateToc(e.target.value));
+
+    // Two-Page Spread Viewport Navigation
+    this.viewportContainer?.addEventListener('click', (e) => {
+      if (!this.isSpreadMode) return;
+      if (e.target.closest('button, a, input, select')) return;
+      const rect = this.viewportContainer.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      if (x < rect.width * 0.25) {
+        this.prevSpread();
+      } else if (x > rect.width * 0.75) {
+        this.nextSpread();
+      }
+    });
+
+    this.viewportContainer?.addEventListener('wheel', (e) => {
+      if (!this.isSpreadMode) return;
+      e.preventDefault();
+      if (e.deltaY > 0 || e.deltaX > 0) this.nextSpread();
+      else if (e.deltaY < 0 || e.deltaX < 0) this.prevSpread();
+    }, { passive: false });
+
     // Sync Hub Actions
     document.getElementById('hubCheckChannelBtn')?.addEventListener('click', () => this.loadSyncHubData());
     document.getElementById('hubForceSyncBtn')?.addEventListener('click', () => this.handleForceSync());
@@ -910,6 +928,9 @@ class WinReadApp {
     document.getElementById('hubCopyUrlBtn')?.addEventListener('click', () => this.copyCompanionUrl());
     document.getElementById('hubSelectBackupBtn')?.addEventListener('click', () => this.handleImportBackupDialog());
     document.getElementById('hubBackupDropArea')?.addEventListener('click', () => this.handleImportBackupDialog());
+    this.hubAdapterSelect?.addEventListener('change', (e) => this.loadSyncHubData(e.target.value));
+    this.hubBluetoothReceiveBtn?.addEventListener('click', () => this.handleBluetoothReceive());
+    this.hubAdbWirelessBtn?.addEventListener('click', () => this.handleAdbWirelessConnect());
 
     // Drag and Drop
     window.addEventListener('dragover', (e) => {
@@ -936,13 +957,19 @@ class WinReadApp {
         }
         document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden'));
         this.drawerOverlay?.classList.add('hidden');
+      } else if (e.key === 'b' || e.key === 'B') {
+        if (isReaderActive && !e.target.matches('input, textarea')) {
+          this.toggleSpreadMode();
+        }
       } else if (e.key === '[' || (e.shiftKey && e.key === 'ArrowLeft')) {
         if (isReaderActive && !e.target.matches('input')) {
-          this.goToPrevChapter();
+          if (this.isSpreadMode) this.prevSpread();
+          else this.goToPrevChapter();
         }
       } else if (e.key === ']' || (e.shiftKey && e.key === 'ArrowRight')) {
         if (isReaderActive && !e.target.matches('input')) {
-          this.goToNextChapter();
+          if (this.isSpreadMode) this.nextSpread();
+          else this.goToNextChapter();
         }
       } else if (e.key === 'f' || e.key === 'F') {
         if (!e.target.matches('input, textarea')) this.toggleFullscreen();
@@ -1010,28 +1037,18 @@ class WinReadApp {
     const countLabel = document.getElementById('storageBooksCount');
     if (countLabel) countLabel.textContent = `${count} томов`;
 
-    // Counts by status
+    // Counts by category in sidebar
     const all = this.libraryBooks.length;
     const reading = this.libraryBooks.filter(b => b.reading_status === 'reading').length;
     const toRead = this.libraryBooks.filter(b => b.reading_status === 'to_read').length;
     const haveRead = this.libraryBooks.filter(b => b.reading_status === 'have_read').length;
+    const favorites = this.libraryBooks.filter(b => b.is_favorite).length;
 
-    const elAll = document.getElementById('countAll'); if (elAll) elAll.textContent = `(${all})`;
-    const elReading = document.getElementById('countReading'); if (elReading) elReading.textContent = `(${reading})`;
-    const elToRead = document.getElementById('countToRead'); if (elToRead) elToRead.textContent = `(${toRead})`;
-    const elHaveRead = document.getElementById('countHaveRead'); if (elHaveRead) elHaveRead.textContent = `(${haveRead})`;
-
-    // Formats count
-    const fb2Count = this.libraryBooks.filter(b => (b.format || '').includes('fb2')).length;
-    const epubCount = this.libraryBooks.filter(b => (b.format || '').includes('epub')).length;
-    const pdfCount = this.libraryBooks.filter(b => (b.format || '').includes('pdf')).length;
-    const otherCount = this.libraryBooks.filter(b => (b.format || '').includes('txt') || (b.format || '').includes('mobi')).length;
-
-    const elFmtAll = document.getElementById('fmtAllCount'); if (elFmtAll) elFmtAll.textContent = `(${all})`;
-    const elFmtFb2 = document.getElementById('fmtFb2Count'); if (elFmtFb2) elFmtFb2.textContent = `(${fb2Count})`;
-    const elFmtEpub = document.getElementById('fmtEpubCount'); if (elFmtEpub) elFmtEpub.textContent = `(${epubCount})`;
-    const elFmtPdf = document.getElementById('fmtPdfCount'); if (elFmtPdf) elFmtPdf.textContent = `(${pdfCount})`;
-    const elFmtOther = document.getElementById('fmtOtherCount'); if (elFmtOther) elFmtOther.textContent = `(${otherCount})`;
+    const elAll = document.getElementById('countAll'); if (elAll) elAll.textContent = all;
+    const elReading = document.getElementById('countReading'); if (elReading) elReading.textContent = reading;
+    const elToRead = document.getElementById('countToRead'); if (elToRead) elToRead.textContent = toRead;
+    const elHaveRead = document.getElementById('countHaveRead'); if (elHaveRead) elHaveRead.textContent = haveRead;
+    const elFavorites = document.getElementById('countFavorites'); if (elFavorites) elFavorites.textContent = favorites;
   }
 
   updateHeroReadingCard() {
@@ -1074,18 +1091,21 @@ class WinReadApp {
     this.booksGrid.innerHTML = '';
 
     let filtered = this.libraryBooks;
-    if (this.activeTab !== 'all') {
+    if (this.activeTab === 'favorites') {
+      filtered = filtered.filter(b => b.is_favorite);
+    } else if (this.activeTab !== 'all') {
       filtered = filtered.filter(b => b.reading_status === this.activeTab);
     }
-    if (this.activeFormat !== 'all') {
-      filtered = filtered.filter(b => (b.format || '').toLowerCase().includes(this.activeFormat));
-    }
+
     if (this.searchQuery) {
       filtered = filtered.filter(b =>
         (b.title && b.title.toLowerCase().includes(this.searchQuery)) ||
         (b.author && b.author.toLowerCase().includes(this.searchQuery))
       );
     }
+
+    // Default sort by last read date descending
+    filtered = filtered.slice().sort((a, b) => (b.last_read_at || 0) - (a.last_read_at || 0));
 
     if (filtered.length === 0) {
       this.emptyLibrary?.classList.remove('hidden');
@@ -1201,6 +1221,7 @@ class WinReadApp {
       // Switch directly to reader view without chapter modal
       this.tocModal?.classList.add('hidden');
       this.switchMainView('reader');
+      this.applySpreadMode();
 
       await this.loadChapter(initialChapter, {
         chapterIndex: initialChapter,
@@ -1259,6 +1280,9 @@ class WinReadApp {
       });
 
       this.scroller.setBlocks(blocks, targetPosition);
+      if (this.isSpreadMode) {
+        this.renderSpreadBlocks();
+      }
       this.updateChapterNavButtons();
     } catch (err) {
       console.error(`Failed to load chapter ${chapterIndex}:`, err);
@@ -1328,17 +1352,135 @@ class WinReadApp {
   }
 
   // ==========================================================================
+  // Two-Page Spread Mode Methods («Разворот книги»)
+  // ==========================================================================
+
+  toggleSpreadMode() {
+    this.isSpreadMode = !this.isSpreadMode;
+    localStorage.setItem('winread_spread_mode', String(this.isSpreadMode));
+    this.applySpreadMode();
+    this.showToast(this.isSpreadMode ? 'Режим чтения: Разворот книги' : 'Режим чтения: Обычный свиток');
+  }
+
+  applySpreadMode() {
+    if (!this.readerView) return;
+    this.readerView.classList.toggle('spread-mode', this.isSpreadMode);
+    this.viewSpreadBtn?.classList.toggle('mode-active', this.isSpreadMode);
+
+    if (this.isSpreadMode) {
+      this.renderSpreadBlocks();
+    } else {
+      if (this.virtualScrollerContent) {
+        this.virtualScrollerContent.innerHTML = '';
+      }
+      this.scroller.pool = [];
+      this.scroller.recalculateHeights();
+      this.scroller.render();
+    }
+  }
+
+  renderSpreadBlocks() {
+    if (!this.virtualScrollerContent) return;
+    this.virtualScrollerContent.innerHTML = '';
+
+    const blocks = this.scroller.blocks || [];
+    blocks.forEach((block) => {
+      const blockEl = document.createElement('div');
+      blockEl.className = 'reader-block';
+      blockEl.innerHTML = block.html;
+      blockEl.dataset.blockId = block.id;
+      blockEl.dataset.chapter = block.chapterIndex;
+      blockEl.dataset.paragraph = block.blockIndex;
+
+      const nextBtn = blockEl.querySelector('.chapter-next-btn, .next-chapter-jump-btn');
+      if (nextBtn) {
+        nextBtn.onclick = (e) => {
+          e.stopPropagation();
+          this.goToNextChapter();
+        };
+      }
+      const finishBtn = blockEl.querySelector('.chapter-finish-btn, .finish-book-jump-btn');
+      if (finishBtn) {
+        finishBtn.onclick = (e) => {
+          e.stopPropagation();
+          this.closeReaderAndShowLibrary();
+        };
+      }
+      this.virtualScrollerContent.appendChild(blockEl);
+    });
+
+    this.viewportContainer.scrollLeft = 0;
+    this.updateSpreadProgress();
+  }
+
+  nextSpread() {
+    if (!this.viewportContainer) return;
+    const step = (this.viewportContainer.clientWidth || 800) * 0.9;
+    this.viewportContainer.scrollBy({ left: step, behavior: 'smooth' });
+    this.updateSpreadProgress();
+  }
+
+  prevSpread() {
+    if (!this.viewportContainer) return;
+    const step = (this.viewportContainer.clientWidth || 800) * 0.9;
+    this.viewportContainer.scrollBy({ left: -step, behavior: 'smooth' });
+    this.updateSpreadProgress();
+  }
+
+  updateSpreadProgress() {
+    if (!this.viewportContainer) return;
+    setTimeout(() => {
+      const max = Math.max(1, this.viewportContainer.scrollWidth - this.viewportContainer.clientWidth);
+      const cur = this.viewportContainer.scrollLeft;
+      const isAtEnd = cur >= max - 25;
+      const pct = isAtEnd ? 100 : Math.min(99.9, Math.max(0, (cur / max) * 100));
+      const roundPct = Math.round(pct);
+
+      if (this.readerProgressBadge) this.readerProgressBadge.textContent = `${roundPct}%`;
+      if (this.footerPercent) this.footerPercent.textContent = `${roundPct}%`;
+      if (this.progressSlider) this.progressSlider.value = pct;
+
+      const totalChapters = this.currentChapters.length;
+      let overallPercent = pct;
+      if (totalChapters > 0) {
+        overallPercent = Math.min(100, Math.max(0, ((this.activeChapterIndex + (pct / 100)) / totalChapters) * 100));
+      }
+
+      if (this.currentBook) {
+        clearTimeout(this.saveProgressTimer);
+        this.saveProgressTimer = setTimeout(() => {
+          window.winread.updateProgress(this.currentBook.id, {
+            chapterIndex: this.activeChapterIndex,
+            paragraphIndex: 0,
+            charOffset: 0,
+            percentage: overallPercent
+          });
+        }, 500);
+      }
+    }, 120);
+  }
+
+  // ==========================================================================
   // ReadEra Sync Hub Logic (Photo 2 Reference)
   // ==========================================================================
 
-  async loadSyncHubData() {
+  async loadSyncHubData(preferredIp = null) {
     try {
-      const info = await window.winread.getSyncInfo();
+      const info = await window.winread.getSyncInfo(preferredIp);
 
       if (info?.server) {
         if (this.hubPrimaryUrl) this.hubPrimaryUrl.textContent = info.server.primaryUrl;
         if (this.hubPortStatus) this.hubPortStatus.textContent = `Порт ${info.server.port} активен`;
         if (this.hubQrContainer) this.hubQrContainer.innerHTML = info.server.qrSvg || '';
+
+        if (this.hubAdapterSelect && info.server.adapters) {
+          this.hubAdapterSelect.innerHTML = info.server.adapters.map(ad =>
+            `<option value="${ad.ip}" ${ad.ip === info.server.ip ? 'selected' : ''}>${ad.name} (${ad.ip})</option>`
+          ).join('');
+          if (info.server.ip) {
+            this.hubAdapterSelect.value = info.server.ip;
+          }
+        }
       }
 
       if (info?.mtp && info.mtp.available && info.mtp.devices.length > 0) {
@@ -1356,6 +1498,46 @@ class WinReadApp {
       if (this.metricBooksCount) this.metricBooksCount.textContent = `${this.libraryBooks.length} книг`;
     } catch (err) {
       this.logTerminal(`Ошибка проверки канала: ${err.message}`, 'highlight');
+    }
+  }
+
+  async handleBluetoothReceive() {
+    this.showToast('Запуск службы приема Bluetooth...');
+    this.logTerminal('Запуск мастера приема файлов Bluetooth (fsquirt)...', 'info');
+    try {
+      const res = await window.winread.openBluetoothReceive();
+      if (res.success) {
+        this.logTerminal('Служба Bluetooth готова к приему файлов .bak с телефона.', 'success');
+        this.showToast('Мастер приема Bluetooth открыт', 3000);
+      } else {
+        this.logTerminal(`Ошибка Bluetooth: ${res.error}`, 'highlight');
+        this.showToast(`Ошибка: ${res.error}`, 3500);
+      }
+    } catch (err) {
+      this.logTerminal(`Исключение Bluetooth: ${err.message}`, 'highlight');
+    }
+  }
+
+  async handleAdbWirelessConnect() {
+    const ip = this.hubAdbWirelessInput?.value.trim();
+    if (!ip) {
+      this.showToast('Укажите IP:порт (например, 192.168.1.50:5555)');
+      return;
+    }
+    this.showToast(`Подключение к ${ip}...`);
+    this.logTerminal(`Попытка ADB подключения к ${ip}...`, 'info');
+    try {
+      const res = await window.winread.connectAdbWireless(ip);
+      if (res.success) {
+        this.logTerminal(`ADB подключен: ${res.output || ip}`, 'success');
+        this.showToast('Телефон подключен по ADB Wi-Fi!', 3000);
+        await this.loadSyncHubData();
+      } else {
+        this.logTerminal(`Ошибка ADB: ${res.error}`, 'highlight');
+        this.showToast(`Не удалось подключить ADB: ${res.error}`, 4000);
+      }
+    } catch (err) {
+      this.logTerminal(`Ошибка ADB: ${err.message}`, 'highlight');
     }
   }
 
@@ -1418,24 +1600,53 @@ class WinReadApp {
   // Modals & Helpers
   // ==========================================================================
 
-  populateToc() {
+  populateToc(filterQuery = '') {
     if (!this.tocList) return;
     this.tocList.innerHTML = '';
+    const query = (filterQuery || '').trim().toLowerCase();
+
+    let matches = 0;
     this.currentChapters.forEach((ch, idx) => {
+      const title = ch.title || `Глава ${idx + 1}`;
+      if (query && !title.toLowerCase().includes(query)) return;
+
+      matches++;
+      const isActive = idx === this.activeChapterIndex;
       const item = document.createElement('div');
-      item.className = `toc-item ${idx === this.activeChapterIndex ? 'active' : ''}`;
-      item.innerHTML = `<span>${escapeHtml(ch.title)}</span>`;
+      item.className = `toc-item ${isActive ? 'active' : ''}`;
+      item.innerHTML = `
+        <span class="toc-chapter-num">${String(idx + 1).padStart(2, '0')}</span>
+        <span class="toc-chapter-title">${escapeHtml(title)}</span>
+        ${isActive ? '<span class="toc-active-pill">Читаю</span>' : ''}
+      `;
       item.addEventListener('click', () => {
         this.tocModal?.classList.add('hidden');
         this.loadChapter(idx);
       });
       this.tocList.appendChild(item);
     });
+
+    if (matches === 0) {
+      this.tocList.innerHTML = `<div class="empty-drawer-text" style="padding: 32px 16px; text-align: center; color: var(--text-muted)">Главы не найдены</div>`;
+    }
   }
 
   openTocModal() {
+    if (this.tocBookSubtitle) {
+      this.tocBookSubtitle.textContent = this.currentBook?.title || 'Книга';
+    }
+    if (this.tocSearchInput) {
+      this.tocSearchInput.value = '';
+    }
     this.populateToc();
     this.tocModal?.classList.remove('hidden');
+
+    setTimeout(() => {
+      const activeEl = this.tocList?.querySelector('.toc-item.active');
+      if (activeEl) {
+        activeEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
+    }, 60);
   }
 
   openTypographyModal() {

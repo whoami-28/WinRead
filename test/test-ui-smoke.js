@@ -87,6 +87,35 @@ app.whenReady().then(async () => {
   `);
   console.log('Back to Library State:', backState);
 
+  // Test Spread Mode Toggle
+  const spreadState = await win.webContents.executeJavaScript(`
+    (() => {
+      window.appInstance.toggleSpreadMode();
+      const isSpread1 = window.appInstance.isSpreadMode;
+      window.appInstance.toggleSpreadMode();
+      const isSpread2 = window.appInstance.isSpreadMode;
+      return { isSpread1, isSpread2 };
+    })()
+  `);
+  console.log('Spread Mode Toggle State:', spreadState);
+
+  // Test TOC Modal Search and Render
+  const tocState = await win.webContents.executeJavaScript(`
+    (() => {
+      window.appInstance.currentChapters = [
+        { title: 'Глава 1: Пролог' },
+        { title: 'Глава 2: Знакомство' },
+        { title: 'Глава 3: В путь' }
+      ];
+      window.appInstance.openTocModal();
+      const initialCount = document.querySelectorAll('#tocList .toc-item').length;
+      window.appInstance.populateToc('знакомство');
+      const filteredCount = document.querySelectorAll('#tocList .toc-item').length;
+      return { initialCount, filteredCount };
+    })()
+  `);
+  console.log('TOC Modal Test:', tocState);
+
   console.log('✓ All DOM view transitions tested successfully!');
   app.quit();
 });

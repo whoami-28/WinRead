@@ -1,7 +1,7 @@
 {
   "name": "winread",
   "productName": "WinRead",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Ultra-optimized desktop e-book reader mimicking ReadEra with off-main-thread parsing, virtualized DOM scroller, and bidirectional Android sync",
   "main": "main.js",
   "scripts": {
