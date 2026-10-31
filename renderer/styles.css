@@ -1638,6 +1638,10 @@ body.window-maximized .reader-fullscreen-view {
   gap: 10px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
+.chapter-end-card {
+  pointer-events: auto !important;
+  user-select: none;
+}
 .chapter-end-badge {
   font-size: 0.72rem;
   font-weight: 700;
@@ -1652,7 +1656,9 @@ body.window-maximized .reader-fullscreen-view {
   font-family: "Charter", "Georgia", serif;
 }
 .chapter-next-btn,
-.chapter-finish-btn {
+.chapter-finish-btn,
+.next-chapter-jump-btn,
+.finish-book-jump-btn {
   margin-top: 6px;
   background: var(--accent-gold-btn) !important;
   color: #121316 !important;
@@ -1660,14 +1666,31 @@ body.window-maximized .reader-fullscreen-view {
   border: none !important;
   border-radius: var(--radius-md) !important;
   padding: 9px 20px !important;
-  cursor: pointer;
+  cursor: pointer !important;
+  pointer-events: auto !important;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  transition: transform 0.12s ease, filter 0.12s ease;
 }
 .chapter-next-btn:hover,
-.chapter-finish-btn:hover {
+.chapter-finish-btn:hover,
+.next-chapter-jump-btn:hover,
+.finish-book-jump-btn:hover {
   filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+.chapter-next-btn:active,
+.chapter-finish-btn:active,
+.next-chapter-jump-btn:active,
+.finish-book-jump-btn:active {
+  transform: translateY(1px);
+}
+.chapter-next-btn *,
+.chapter-finish-btn *,
+.next-chapter-jump-btn *,
+.finish-book-jump-btn * {
+  pointer-events: none;
 }
 
 /* Reader Bottom Status & Chapter Navigation Bar */

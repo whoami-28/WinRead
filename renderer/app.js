@@ -340,15 +340,17 @@ class VirtualScroller {
       poolItem.element.dataset.paragraph = block.blockIndex;
 
       // Handle next chapter action clicks inside scroller
-      const nextJumpBtn = poolItem.element.querySelector('.next-chapter-jump-btn');
+      const nextJumpBtn = poolItem.element.querySelector('.chapter-next-btn, .next-chapter-jump-btn');
       if (nextJumpBtn) {
-        nextJumpBtn.onclick = () => {
+        nextJumpBtn.onclick = (e) => {
+          e.stopPropagation();
           if (window.appInstance) window.appInstance.goToNextChapter();
         };
       }
-      const finishJumpBtn = poolItem.element.querySelector('.finish-book-jump-btn');
+      const finishJumpBtn = poolItem.element.querySelector('.chapter-finish-btn, .finish-book-jump-btn');
       if (finishJumpBtn) {
-        finishJumpBtn.onclick = () => {
+        finishJumpBtn.onclick = (e) => {
+          e.stopPropagation();
           if (window.appInstance) window.appInstance.closeReaderAndShowLibrary();
         };
       }
@@ -901,8 +903,24 @@ class WinReadApp {
     // TOC Search Input
     this.tocSearchInput?.addEventListener('input', (e) => this.populateToc(e.target.value));
 
-    // Two-Page Spread Viewport Navigation
+    // Terminal chapter action buttons & Two-Page Spread Viewport Navigation
     this.viewportContainer?.addEventListener('click', (e) => {
+      const nextBtn = e.target.closest('.chapter-next-btn, .next-chapter-jump-btn');
+      if (nextBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.goToNextChapter();
+        return;
+      }
+
+      const finishBtn = e.target.closest('.chapter-finish-btn, .finish-book-jump-btn');
+      if (finishBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.closeReaderAndShowLibrary();
+        return;
+      }
+
       if (!this.isSpreadMode) return;
       if (e.target.closest('button, a, input, select')) return;
       const rect = this.viewportContainer.getBoundingClientRect();
@@ -1261,7 +1279,7 @@ class WinReadApp {
           <div class="chapter-end-card">
             <div class="chapter-end-badge">Глава прочитана</div>
             <div class="chapter-end-title">Следующая: ${escapeHtml(nextTitle)}</div>
-            <button class="chapter-next-btn">
+            <button class="chapter-next-btn next-chapter-jump-btn" type="button">
               <span>Читать следующую главу</span>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </button>
@@ -1270,7 +1288,7 @@ class WinReadApp {
           <div class="chapter-end-card">
             <div class="chapter-end-badge" style="color: var(--accent-green)">Книга завершена!</div>
             <div class="chapter-end-title">Поздравляем с завершением книги!</div>
-            <button class="chapter-finish-btn">
+            <button class="chapter-finish-btn finish-book-jump-btn" type="button">
               <span>Вернуться в библиотеку</span>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
             </button>
