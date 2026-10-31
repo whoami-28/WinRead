@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: http://localhost:* ws://localhost:*; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: http: https:;">
+  <title>WinRead</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="theme-graphite">
+
+  <!-- ==================== MAIN APPLICATION SHELL ==================== -->
+  <div id="app">
+
+    <!-- Top Window Titlebar (Frameless Header with Drag & Window Controls) -->
+    <header id="windowTitlebar" class="window-titlebar">
+      <div class="titlebar-left">
+        <img src="../assets/icon.svg" class="titlebar-logo" alt="WinRead" />
+        <span class="titlebar-title">WinRead</span>
+      </div>
+
+      <div class="titlebar-drag-region"></div>
+
+      <div class="window-controls">
+        <button class="win-btn win-min" title="Свернуть">
+          <svg width="10" height="1" viewBox="0 0 10 1"><rect width="10" height="1" fill="currentColor"/></svg>
+        </button>
+        <button class="win-btn win-max" title="Развернуть">
+          <svg class="max-icon" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.2">
+            <rect x="0.6" y="0.6" width="8.8" height="8.8" rx="1"/>
+          </svg>
+        </button>
+        <button class="win-btn win-close" title="Закрыть">
+          <svg width="10" height="10" viewBox="0 0 10 10" stroke="currentColor" stroke-width="1.2">
+            <line x1="1" y1="1" x2="9" y2="9"/>
+            <line x1="9" y1="1" x2="1" y2="9"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Two-Column App Layout: Sidebar + Main Content -->
+    <div class="app-layout" id="appLayout">
+
+      <!-- ==================== LEFT COLLAPSIBLE SIDEBAR ==================== -->
+      <aside class="app-sidebar" id="appSidebar">
+        <div class="sidebar-top">
+          <div class="sidebar-brand-row">
+            <div class="sidebar-brand-title">
+              <img src="../assets/icon.svg" class="sidebar-logo" alt="Logo" />
+              <span>WinRead</span>
+            </div>
+            <button class="sidebar-toggle-btn" id="sidebarToggleBtn" title="Свернуть / Развернуть панель">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="9" y1="3" x2="9" y2="21"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="sidebar-version-badge">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            <span data-i18n="catalog_subtitle">Каталог</span>
+            <span class="version-num">v1.0.0</span>
+          </div>
+        </div>
+
+        <!-- Sidebar Navigation Menu -->
+        <nav class="sidebar-menu">
+          <button class="sidebar-item active" data-nav="library" id="navLibrary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            <span class="nav-text" data-i18n="nav_library">Библиотека</span>
+          </button>
+          <button class="sidebar-item" data-nav="reading" id="navReading">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+            <span class="nav-text" data-i18n="nav_reading">Сейчас читаю</span>
+          </button>
+          <button class="sidebar-item" data-nav="favorites" id="navFavorites">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            <span class="nav-text" data-i18n="nav_favorites">Избранное</span>
+          </button>
+          <button class="sidebar-item" data-nav="authors" id="navAuthors">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            <span class="nav-text" data-i18n="nav_authors">Авторы & Серии</span>
+          </button>
+
+          <div class="sidebar-divider"></div>
+
+          <button class="sidebar-item" data-nav="sync" id="navSync">
+            <span class="nav-sync-indicator"></span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            <span class="nav-text" data-i18n="nav_sync">Синхронизация ReadEra</span>
+          </button>
+
+          <button class="sidebar-item" data-action="settings" id="navSettings">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <span class="nav-text" data-i18n="nav_settings">Настройки</span>
+          </button>
+        </nav>
+
+        <!-- Sidebar Bottom Storage Card -->
+        <div class="sidebar-storage-card" id="sidebarStorageCard">
+          <div class="storage-label-row">
+            <span data-i18n="storage_label">Хранилище книг</span>
+            <span class="storage-size-val" id="storageSizeVal">3.8 ГБ / 8 ГБ</span>
+          </div>
+          <div class="storage-bar">
+            <div class="storage-bar-fill" id="storageBarFill" style="width: 48%;"></div>
+          </div>
+          <div class="storage-stats-row">
+            <span id="storageBooksCount">642 тома</span>
+            <span class="storage-formats-list">EPUB · FB2 · PDF · TXT</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ==================== MAIN CONTENT AREA ==================== -->
+      <div class="app-main-content">
+
+        <!-- Top Global Action Header -->
+        <header class="main-header-toolbar">
+          <div class="header-search-wrap">
+            <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="librarySearchInput" class="header-search-input" data-i18n-ph="search_placeholder" placeholder="Поиск по книгам, авторам, цитатам..." />
+            <kbd class="search-kbd">Ctrl+K</kbd>
+          </div>
+
+          <div class="header-right-actions">
+            <!-- Sync Status Pill (Clickable) -->
+            <div class="sync-status-pill" id="syncStatusPill" title="Открыть центр синхронизации">
+              <span class="sync-live-dot"></span>
+              <span class="sync-pill-text" id="syncPillText">ReadEra Sync: Онлайн</span>
+            </div>
+
+            <!-- Open Book Button -->
+            <button id="openBookBtn" class="btn btn-accent-gold" title="Открыть файл книги">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span data-i18n="btn_open_book">Открыть книгу</span>
+            </button>
+
+            <!-- User Avatar Icon -->
+            <div class="header-avatar" title="Профиль читателя">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+          </div>
+        </header>
+
+        <!-- ==================== VIEW 1: LIBRARY VIEW ==================== -->
+        <div id="libraryView" class="view-panel">
+
+          <!-- Hero Continue Reading Card (Photo 1 Reference) -->
+          <div class="hero-reading-card hidden" id="heroReadingCard">
+            <div class="hero-cover-wrap" id="heroCoverWrap">
+              <div class="hero-cover-format-badge" id="heroCoverFormat">FB2</div>
+              <div class="hero-cover-art" id="heroCoverArt">
+                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+              </div>
+              <div class="hero-cover-vol" id="heroCoverVol">том I</div>
+            </div>
+
+            <div class="hero-details">
+              <div class="hero-status-row">
+                <span class="hero-chip-tag">• ТЕКУЩЕЕ ЧТЕНИЕ</span>
+                <span class="hero-relative-time" id="heroRelativeTime">15 минут назад</span>
+              </div>
+              <div class="hero-chapter-title" id="heroChapterTitle">Глава 24: «Полночные огни»</div>
+              <h2 class="hero-book-title" id="heroBookTitle">Хоровод невест</h2>
+              <div class="hero-book-author" id="heroBookAuthor">Сергей Александрович Ефанов</div>
+
+              <div class="hero-progress-row">
+                <div class="hero-progress-bar">
+                  <div class="hero-progress-fill" id="heroProgressFill" style="width: 80%;"></div>
+                </div>
+                <div class="hero-progress-stats">
+                  <span class="hero-pct-val" id="heroPctVal">80%</span>
+                  <span class="hero-est-time" id="heroEstTime">~42 мин ост.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="hero-actions">
+              <button class="hero-icon-btn" id="heroBookmarkBtn" title="Закладка">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+              </button>
+              <button class="hero-icon-btn" id="heroTocBtn" title="Оглавление">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+              </button>
+              <button class="btn btn-hero-continue" id="heroContinueBtn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span data-i18n="hero_continue">Продолжить чтение</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Status Filter Tabs & Sorting Row -->
+          <div class="filter-controls-bar">
+            <div class="status-tabs-pill">
+              <button class="status-tab-btn active" data-tab="all">
+                <span data-i18n="tab_all">Все книги</span> <span class="tab-count" id="countAll">(0)</span>
+              </button>
+              <button class="status-tab-btn" data-tab="reading">
+                <span data-i18n="tab_reading">Читаю сейчас</span> <span class="tab-count" id="countReading">(0)</span>
+              </button>
+              <button class="status-tab-btn" data-tab="to_read">
+                <span data-i18n="tab_to_read">Хочу прочитать</span> <span class="tab-count" id="countToRead">(0)</span>
+              </button>
+              <button class="status-tab-btn" data-tab="have_read">
+                <span data-i18n="tab_have_read">Прочитано</span> <span class="tab-count" id="countHaveRead">(0)</span>
+              </button>
+              <button class="status-tab-btn" data-tab="favorites">
+                <span>❤ Изб.</span> <span class="tab-count" id="countFavorites">(0)</span>
+              </button>
+            </div>
+
+            <div class="filter-right-options">
+              <div class="sort-select-wrap">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="7" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="21" y1="18" x2="7" y2="18"></line></svg>
+                <select id="sortSelect" class="sort-select">
+                  <option value="last_read" selected>По дате чтения</option>
+                  <option value="title">По названию</option>
+                  <option value="author">По автору</option>
+                  <option value="progress">По прогрессу</option>
+                </select>
+              </div>
+
+              <div class="view-mode-toggle">
+                <button class="view-toggle-btn active" id="viewModeGrid" title="Сетка">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                </button>
+                <button class="view-toggle-btn" id="viewModeList" title="Список">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Format Filter Chips Row -->
+          <div class="format-chips-row">
+            <div class="format-chips-left">
+              <span class="format-chips-label" data-i18n="formats_label">ФОРМАТЫ:</span>
+              <button class="format-chip active" data-format="all">Все <span id="fmtAllCount">(0)</span></button>
+              <button class="format-chip" data-format="fb2">FB2 <span id="fmtFb2Count">(0)</span></button>
+              <button class="format-chip" data-format="epub">EPUB <span id="fmtEpubCount">(0)</span></button>
+              <button class="format-chip" data-format="pdf">PDF <span id="fmtPdfCount">(0)</span></button>
+              <button class="format-chip" data-format="txt">TXT / MOBI <span id="fmtOtherCount">(0)</span></button>
+            </div>
+            <div class="format-chips-right">
+              <span class="last-sync-time" id="lastSyncTimeText">Синхронизировано: 2 мин назад</span>
+              <button class="sync-refresh-btn" id="syncRefreshBtn" title="Обновить синхронизацию">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Books Grid Scroll Area -->
+          <div class="library-scroll-area">
+            <div id="booksGrid" class="books-grid">
+              <!-- Dynamically populated book cards with bookmark ribbons -->
+            </div>
+
+            <div id="emptyLibrary" class="empty-state hidden">
+              <div class="empty-icon">
+                <img src="../assets/icon.svg" width="64" height="64" alt="WinRead" style="opacity: 0.8;" />
+              </div>
+              <h3 data-i18n="empty_title">Ваша библиотека пуста</h3>
+              <p data-i18n="empty_desc">Перетащите сюда файлы .epub, .fb2, .mobi, .txt или нажмите «Открыть книгу»</p>
+              <div class="empty-actions">
+                <button id="emptyOpenBtn" class="btn btn-primary" data-i18n="empty_open">Выбрать файл книги</button>
+                <button id="emptyImportBackupBtn" class="btn btn-secondary" data-i18n="empty_import_backup">Импорт бэкапа ReadEra</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Library Status Footer (Photo 1 Reference) -->
+          <footer class="library-status-bar">
+            <div class="reading-goal-widget">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <span class="goal-label">Цель на день:</span>
+              <span class="goal-stat-text" id="goalStatText">45 из 60 мин (75%)</span>
+              <div class="goal-progress-bar"><div class="goal-progress-fill" style="width: 75%;"></div></div>
+            </div>
+
+            <div class="library-footer-center">
+              <span class="sync-footer-dot"></span>
+              <span class="sync-footer-text">ReadEra Cloud: синхронизировано</span>
+            </div>
+
+            <div class="library-footer-right">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+              <span class="catalog-path-text" id="catalogPathText">Каталог: /AppData/Local/winread/books</span>
+            </div>
+          </footer>
+        </div>
+
+        <!-- ==================== VIEW 2: READERA SYNC HUB (PHOTO 2 REFERENCE) ==================== -->
+        <div id="syncView" class="view-panel hidden">
+          <div class="sync-hub-header">
+            <div class="sync-hub-title-group">
+              <div class="sync-hub-title-row">
+                <span class="sync-live-dot large"></span>
+                <h2 data-i18n="sync_hub_title">Центр синхронизации ReadEra</h2>
+              </div>
+              <div class="sync-hub-meta-row">
+                <span class="meta-tag green">Онлайн — 1 устройство на связи</span>
+                <span class="meta-sep">•</span>
+                <span class="meta-tag">Посл. синхронизация: <strong id="hubLastSync">2 мин назад</strong></span>
+                <span class="meta-sep">•</span>
+                <span class="meta-tag text-muted">WinRead bridge v1.0.0-rev3</span>
+              </div>
+            </div>
+
+            <div class="sync-hub-actions">
+              <button class="btn btn-secondary" id="hubCheckChannelBtn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                <span>Проверить канал</span>
+              </button>
+              <button class="btn btn-accent-gold" id="hubForceSyncBtn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                <span>Принудительная синхронизация</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 4 Metrics Row (Photo 2 Reference) -->
+          <div class="sync-metrics-grid">
+            <div class="metric-card">
+              <div class="metric-top">
+                <span class="metric-label">ПАРСИНГ АРХИВОВ</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+              </div>
+              <div class="metric-value" id="metricBackupsCount">15 бэкапов</div>
+              <div class="metric-sub green">Все валидны (.bak)</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-top">
+                <span class="metric-label">ТОЧКИ ЧТЕНИЯ</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+              </div>
+              <div class="metric-value" id="metricBooksCount">130 книг</div>
+              <div class="metric-sub blue">Двусторонний матчинг</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-top">
+                <span class="metric-label">ЦИТАТЫ & ЗАМЕТКИ</span>
+                <span class="metric-badge-tag">99</span>
+              </div>
+              <div class="metric-value" id="metricQuotesCount">1204 шт.</div>
+              <div class="metric-sub amber">Цветовые метки сохранены</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-top">
+                <span class="metric-label">КАНАЛ СВЯЗИ</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+              </div>
+              <div class="metric-value">USB + Wi-Fi</div>
+              <div class="metric-sub green">WebSocket & MTP</div>
+            </div>
+          </div>
+
+          <!-- 3 Channels Section Grid -->
+          <div class="sync-channels-grid">
+            <!-- Channel 01: USB MTP Phone -->
+            <div class="channel-card">
+              <div class="channel-card-header">
+                <span class="channel-num">КАНАЛ 01</span>
+                <h4 class="channel-title">Подключение по USB (Телефон Android)</h4>
+                <span class="channel-status-dot green"></span>
+              </div>
+              <p class="channel-desc">Автоматическое определение подключенного MTP-устройства и мгновенная репликация бэкапов ReadEra.</p>
+
+              <div class="phone-detected-box">
+                <div class="phone-device-icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+                </div>
+                <div class="phone-device-info">
+                  <div class="phone-device-name" id="hubPhoneName">whoami (Samsung Galaxy S23)</div>
+                  <div class="phone-device-os" id="hubPhoneOs">Android 14</div>
+                  <div class="phone-device-path">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span>Внутренняя память / Android / data / com.readera / databases</span>
+                  </div>
+                  <div class="phone-device-baks" id="hubPhoneBaks">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span>Обнаружено 15 бэкапов ReadEra (.bak)</span>
+                  </div>
+                </div>
+                <button class="btn btn-secondary btn-sm" id="hubSyncUsbBtn">Синхронизировать</button>
+              </div>
+
+              <div class="channel-footer-toggle">
+                <span>Автосинхронизация при подключении кабеля</span>
+                <label class="switch-toggle">
+                  <input type="checkbox" id="autoSyncUsbCheck" checked />
+                  <span class="slider round"></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Channel 02: Local Wi-Fi Companion -->
+            <div class="channel-card">
+              <div class="channel-card-header">
+                <span class="channel-num">КАНАЛ 02</span>
+                <h4 class="channel-title">Локальная сеть Wi-Fi</h4>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+              </div>
+              <p class="channel-desc">Откройте адрес на телефоне в той же Wi-Fi сети или отсканируйте QR-код:</p>
+
+              <div class="qr-code-section">
+                <div class="qr-container-styled" id="hubQrContainer">
+                  <!-- Scannable authentic QR code inserted here -->
+                </div>
+                <div class="qr-meta-box">
+                  <label class="qr-meta-label">COMPANION SERVER URL</label>
+                  <div class="qr-url-badge" id="hubPrimaryUrl">http://192.168.1.145:8765</div>
+                  <div class="qr-port-tag">
+                    <span class="sync-live-dot small"></span>
+                    <span id="hubPortStatus">Порт 8765 активен</span>
+                  </div>
+                  <button class="btn btn-secondary btn-sm" id="hubCopyUrlBtn" style="margin-top: 8px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    <span>Копировать адрес</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="channel-tip-box">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span>При сканировании браузер на смартфоне установит PWA-мост. Книги и прогресс чтения синхронизируются в реальном времени.</span>
+              </div>
+            </div>
+
+            <!-- Channel 03: Direct Backup File -->
+            <div class="channel-card">
+              <div class="channel-card-header">
+                <span class="channel-num">КАНАЛ 03</span>
+                <h4 class="channel-title">Файл бэкапа ReadEra (Импорт / Экспорт)</h4>
+              </div>
+              <p class="channel-desc">Прямая работа с файлами архивов ReadEra (.bak, .backup, .zip).</p>
+
+              <div class="backup-drop-area" id="hubBackupDropArea">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                <div class="drop-hint-text">Перетащите бэкап сюда или кликните для выбора</div>
+                <div class="drop-sub-text">Поддерживаются архивы ReadEra v21 - v26 (ZIP / SQL / JSON)</div>
+                <div class="recent-backup-chip" id="hubRecentBackupName">readera_backup_latest.bak</div>
+              </div>
+
+              <div class="channel-btn-row">
+                <button class="btn btn-secondary btn-sm" id="hubSelectBackupBtn">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  <span>Выбрать файл .bak / .zip</span>
+                </button>
+                <button class="btn btn-secondary btn-sm" id="hubExportBackupBtn">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                  <span>Экспорт бэкапа для ReadEra</span>
+                </button>
+              </div>
+
+              <!-- Rules Box -->
+              <div class="sync-rules-box">
+                <div class="rules-header">ПРАВИЛА ОТСЛЕЖИВАНИЯ ДАННЫХ</div>
+                <div class="rules-row">
+                  <span>Приоритет актуальности:</span>
+                  <strong class="rules-val">По дате (LWW)</strong>
+                </div>
+                <div class="rules-row">
+                  <span>Синхронизация коллекций:</span>
+                  <strong class="rules-val green">Включено</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Terminal Console Log (Photo 2 Reference) -->
+          <div class="sync-terminal-card">
+            <div class="terminal-header">
+              <div class="terminal-dots">
+                <span class="dot red"></span>
+                <span class="dot amber"></span>
+                <span class="dot green"></span>
+              </div>
+              <div class="terminal-title">Служба отладки: daemon_sync.log</div>
+              <div class="terminal-meta">*Слушает порт :8765</div>
+            </div>
+            <div class="terminal-body" id="syncTerminalLog">
+              <div class="log-line"><span class="log-time">[00:09:44]</span> <span class="log-info">Обнаружен телефон: whoami (доступно бэкапов: 15, com.readera/databases)</span></div>
+              <div class="log-line"><span class="log-time">[00:09:54]</span> <span class="log-success">Синхронизировано: 8 книг, позиция чтения «Хоровод невест» обновлена до 80%</span></div>
+              <div class="log-line"><span class="log-time">[00:10:12]</span> <span class="log-info">Статус сессии: активна, сокет открыт на порту 8765 (IPv4: 192.168.1.145)</span></div>
+              <div class="log-line"><span class="log-time">[00:11:06]</span> <span class="log-success">Контрольная сумма SHA-256 проверена для архива readera_backup_latest.bak: OK</span></div>
+              <div class="log-line"><span class="log-time">[00:12:30]</span> <span class="log-highlight">Позиция «Дело Черного Мага. Том 2» актуализирована (стр. 568 / глава 24)</span></div>
+            </div>
+            <div class="terminal-footer">
+              <span class="term-prompt">$ readera-bridge --watch-usb --allow-lan</span>
+              <span class="term-hint">Нажмите CTRL+C для остановки</span>
+            </div>
+          </div>
+        </div>
+
+      </div> <!-- /app-main-content -->
+    </div> <!-- /app-layout -->
+
+    <!-- ==================== FULL-WINDOW IMMERSIVE READER VIEW ==================== -->
+    <!-- Positioned over the entire window so reading is 100% full screen with no sidebar distraction -->
+    <div id="readerView" class="reader-fullscreen-view hidden">
+      <!-- Fullscreen Top Reading Header with Integrated Window Controls -->
+      <header id="readerHeader" class="reader-toolbar">
+        <div class="reader-left-group">
+          <button id="backToLibraryBtn" class="btn btn-secondary btn-sm" title="Назад в библиотеку (Esc)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            <span data-i18n="back_to_library">Библиотека</span>
+          </button>
+          <div class="book-info-pill">
+            <span id="readerBookTitle" class="reader-book-title">Title</span>
+            <span class="sep">/</span>
+            <span id="readerChapterTitle" class="reader-chapter-title">Chapter</span>
+          </div>
+        </div>
+
+        <div class="reader-center-group">
+          <div class="reader-drag-region"></div>
+          <span id="readerProgressBadge" class="progress-pill">0%</span>
+        </div>
+
+        <div class="reader-right-group">
+          <button id="tocBtn" class="icon-btn" data-i18n-title="btn_toc" title="Оглавление">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+          </button>
+
+          <button id="typographyBtn" class="icon-btn" data-i18n-title="btn_typography" title="Шрифт и оформление">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="4 7 4 4 20 4 20 7"></polyline>
+              <line x1="9" y1="20" x2="15" y2="20"></line>
+              <line x1="12" y1="4" x2="12" y2="20"></line>
+            </svg>
+          </button>
+
+          <button id="bookmarksDrawerBtn" class="icon-btn" data-i18n-title="btn_bookmarks_drawer" title="Закладки и цитаты">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </button>
+
+          <button id="addQuickBookmarkBtn" class="icon-btn" data-i18n-title="btn_quick_bookmark" title="Добавить закладку">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+              <line x1="12" y1="7" x2="12" y2="13"></line>
+              <line x1="9" y1="10" x2="15" y2="10"></line>
+            </svg>
+          </button>
+
+          <button id="fullscreenBtn" class="icon-btn" data-i18n-title="btn_fullscreen" title="Полноэкранный режим (F)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+            </svg>
+          </button>
+
+          <div class="reader-toolbar-sep"></div>
+
+          <!-- Integrated Window Controls during Reading -->
+          <div class="reader-win-controls">
+            <button class="win-btn win-min" title="Свернуть">
+              <svg width="10" height="1" viewBox="0 0 10 1"><rect width="10" height="1" fill="currentColor"/></svg>
+            </button>
+            <button class="win-btn win-max" title="Развернуть">
+              <svg class="max-icon" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.2">
+                <rect x="0.6" y="0.6" width="8.8" height="8.8" rx="1"/>
+              </svg>
+            </button>
+            <button class="win-btn win-close" title="Закрыть">
+              <svg width="10" height="10" viewBox="0 0 10 10" stroke="currentColor" stroke-width="1.2">
+                <line x1="1" y1="1" x2="9" y2="9"/>
+                <line x1="9" y1="1" x2="1" y2="9"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Custom Virtualized Recycled DOM Viewport -->
+      <main id="viewportContainer" class="viewport-container">
+        <div id="virtualScrollerSizer" class="virtual-scroller-sizer"></div>
+        <div id="virtualScrollerContent" class="virtual-scroller-content">
+          <!-- Recycled Paragraph & Image DOM Nodes injected here -->
+        </div>
+      </main>
+
+      <!-- Bottom Reading Status & Chapter Navigation Bar -->
+      <footer id="readerFooter" class="reader-footer">
+        <div class="footer-nav-left">
+          <button id="prevChapterBtn" class="btn btn-secondary btn-sm" title="Предыдущая глава ([)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            <span data-i18n="btn_prev_chapter">Предыдущая</span>
+          </button>
+          <div class="footer-chapter" id="footerChapterText">Глава 1</div>
+        </div>
+
+        <div class="slider-container">
+          <input type="range" id="progressSlider" min="0" max="100" step="0.1" value="0" />
+        </div>
+
+        <div class="footer-nav-right">
+          <div class="footer-stats">
+            <span id="footerPercent">0%</span>
+            <span class="sep">·</span>
+            <span id="footerBlockInfo">Блок 0 / 0</span>
+          </div>
+          <button id="nextChapterBtn" class="btn btn-primary btn-sm" title="Следующая глава (])">
+            <span data-i18n="btn_next_chapter">Следующая</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
+      </footer>
+
+      <!-- Text Selection Action Popover -->
+      <div id="selectionPopover" class="selection-popover hidden">
+        <button id="popoverQuoteAmber" class="popover-color-btn amber" title="Янтарный"></button>
+        <button id="popoverQuoteGreen" class="popover-color-btn green" title="Зеленый"></button>
+        <button id="popoverQuoteBlue" class="popover-color-btn blue" title="Синий"></button>
+        <button id="popoverQuoteRose" class="popover-color-btn rose" title="Розовый"></button>
+        <div class="popover-sep"></div>
+        <button id="popoverBookmark" class="popover-action-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span data-i18n="popover_bookmark">В закладки</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ==================== MODALS & DRAWERS ==================== -->
+
+    <!-- Table of Contents Modal -->
+    <div id="tocModal" class="modal hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 data-i18n="toc_title">Оглавление</h3>
+          <button class="close-modal-btn" data-close="tocModal">&times;</button>
+        </div>
+        <div id="tocList" class="toc-list">
+          <!-- Chapter entries -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Typography & Appearance Settings Modal (Photo 3 Reference) -->
+    <div id="typographyModal" class="modal hidden">
+      <div class="modal-card typography-card">
+        <div class="modal-header">
+          <div class="modal-header-title-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-amber)" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>
+            <h3 data-i18n="typography_title">Шрифты и оформление</h3>
+          </div>
+          <button class="close-modal-btn" data-close="typographyModal">&times;</button>
+        </div>
+
+        <div class="typography-settings">
+          <!-- 1. Language Slider -->
+          <div class="setting-group">
+            <div class="setting-header-row">
+              <label class="setting-header-label" data-i18n="lang_header">ЯЗЫК ИНТЕРФЕЙСА</label>
+              <span class="setting-tag-hint">UI Language</span>
+            </div>
+            <div class="lang-switch-container">
+              <button class="lang-pill-btn" data-lang="en">English</button>
+              <button class="lang-pill-btn active" data-lang="ru">Русский</button>
+            </div>
+            <p class="setting-caption" data-i18n="lang_desc">Выберите язык для отображения интерфейса программы.</p>
+          </div>
+
+          <!-- 2. Color Themes (Photo 3 Swatches) -->
+          <div class="setting-group">
+            <div class="setting-header-row">
+              <label class="setting-header-label" data-i18n="theme_label">ЦВЕТОВАЯ ТЕМА</label>
+              <span class="active-theme-name" id="activeThemeName">Графит (активна)</span>
+            </div>
+            <div class="theme-picker-cards">
+              <button class="theme-card active" data-theme="theme-graphite">
+                <span class="theme-dot dot-amber"></span>
+                <span class="theme-name" data-i18n="theme_graphite">Графит</span>
+              </button>
+              <button class="theme-card" data-theme="theme-oled">
+                <span class="theme-dot dot-white"></span>
+                <span class="theme-name" data-i18n="theme_oled">OLED Чёрный</span>
+              </button>
+              <button class="theme-card" data-theme="theme-sepia">
+                <span class="theme-dot dot-sepia"></span>
+                <span class="theme-name" data-i18n="theme_sepia">Сепия</span>
+              </button>
+              <button class="theme-card" data-theme="theme-paper">
+                <span class="theme-dot dot-paper"></span>
+                <span class="theme-name" data-i18n="theme_paper">Бумага</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 3. Font Family Selector -->
+          <div class="setting-group">
+            <label class="setting-header-label" data-i18n="font_label">ШРИФТ</label>
+            <div class="font-picker-segmented">
+              <button class="font-choice-btn active" data-font="font-sans" data-i18n="font_sans">Без засечек</button>
+              <button class="font-choice-btn" data-font="font-serif" data-i18n="font_serif">С засечками</button>
+              <button class="font-choice-btn" data-font="font-mono" data-i18n="font_mono">Моноширинный</button>
+            </div>
+          </div>
+
+          <!-- 4. Font Size -->
+          <div class="setting-group">
+            <div class="setting-label-row">
+              <div class="setting-label-left">
+                <label class="setting-header-label" data-i18n="font_size_label">РАЗМЕР ШРИФТА</label>
+                <span class="font-step-hints">A- A+</span>
+              </div>
+              <span class="setting-numeric-val" id="fontSizeVal">18px</span>
+            </div>
+            <input type="range" id="fontSizeSlider" min="14" max="32" step="1" value="18" />
+          </div>
+
+          <!-- 5. Line Height -->
+          <div class="setting-group">
+            <div class="setting-label-row">
+              <label class="setting-header-label" data-i18n="line_height_label">МЕЖСТРОЧНЫЙ ИНТЕРВАЛ</label>
+              <span class="setting-numeric-val" id="lineHeightVal">1.6</span>
+            </div>
+            <input type="range" id="lineHeightSlider" min="1.2" max="2.4" step="0.1" value="1.6" />
+          </div>
+
+          <!-- 6. Reading Width -->
+          <div class="setting-group">
+            <div class="setting-label-row">
+              <label class="setting-header-label" data-i18n="reading_width_label">ШИРИНА ТЕКСТА</label>
+              <span class="setting-numeric-val" id="readingWidthVal">700px</span>
+            </div>
+            <input type="range" id="readingWidthSlider" min="500" max="1200" step="20" value="700" />
+          </div>
+
+          <!-- 7. Page Margins -->
+          <div class="setting-group">
+            <div class="setting-label-row">
+              <label class="setting-header-label">ПОЛЯ СТРАНИЦЫ</label>
+              <span class="setting-numeric-val" id="pageMarginsVal">48px</span>
+            </div>
+            <input type="range" id="pageMarginsSlider" min="20" max="100" step="4" value="48" />
+          </div>
+
+          <!-- 8. Interactive Live Preview Box (Photo 3 Reference) -->
+          <div class="live-preview-box">
+            <div class="preview-header-tag">
+              <span class="live-preview-label">ЖИВОЙ ПРЕДПРОСМОТР</span>
+              <span class="live-dot-interactive">• Интерактивно</span>
+            </div>
+            <div class="preview-content-card" id="settingsLivePreview">
+              «Каждая книга — это дверь в иное измерение, где время замедляет свой стремительный бег, а разум находит долгожданную ясность и глубокий покой.»
+            </div>
+          </div>
+
+          <!-- Bottom Action Buttons -->
+          <div class="settings-modal-footer">
+            <button class="btn btn-secondary" id="resetDefaultsBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+              <span>По умолчанию</span>
+            </button>
+            <button class="btn btn-accent-gold" id="applySettingsBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Применить</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bookmarks & Quotes Side Drawer -->
+    <div id="drawerOverlay" class="drawer-overlay hidden">
+      <div class="drawer">
+        <div class="drawer-header">
+          <div class="drawer-tabs">
+            <button class="drawer-tab-btn active" data-drawer-tab="bookmarks" data-i18n="drawer_tab_bookmarks">Закладки</button>
+            <button class="drawer-tab-btn" data-drawer-tab="quotes" data-i18n="drawer_tab_quotes">Цитаты</button>
+          </div>
+          <button id="closeDrawerBtn" class="close-drawer-btn">&times;</button>
+        </div>
+
+        <div id="drawerBookmarksList" class="drawer-content active">
+          <!-- Bookmarks list -->
+        </div>
+
+        <div id="drawerQuotesList" class="drawer-content hidden">
+          <!-- Quotes list -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Drag & Drop Overlay Indicator -->
+    <div id="dropOverlay" class="drop-overlay hidden">
+      <div class="drop-modal">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        <h3 data-i18n="drop_title">Перетащите книгу или бэкап ReadEra</h3>
+        <p data-i18n="drop_desc">EPUB, FB2, MOBI, TXT или файл .bak</p>
+      </div>
+    </div>
+
+  </div> <!-- /app -->
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Production build outputs & installers (download via GitHub Releases)
+dist/
+build/
+*.exe
+*.blockmap
+*.7z
+
+# Local personal user data & library cache
+data/
+*.sqlite
+*.sqlite3
+*.db
+*.bak
+
+# Temporary test samples & cache
+samples/
+tmp/
+temp/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo

@@ -1,0 +1,89 @@
+{
+  "name": "winread",
+  "productName": "WinRead",
+  "version": "1.0.0",
+  "description": "Ultra-optimized desktop e-book reader mimicking ReadEra with off-main-thread parsing, virtualized DOM scroller, and bidirectional Android sync",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node test/run-tests.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win",
+    "dist:all": "electron-builder --win nsis portable",
+    "build:icon": "electron assets/generate-icon.js"
+  },
+  "keywords": [
+    "ebook",
+    "reader",
+    "readera",
+    "epub",
+    "fb2",
+    "mobi",
+    "txt",
+    "electron",
+    "virtual-scroll"
+  ],
+  "author": "WinRead Team",
+  "license": "MIT",
+  "dependencies": {
+    "qrcode": "^1.5.4",
+    "sql.js": "^1.12.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "electron": "^34.2.0",
+    "electron-builder": "^26.0.2"
+  },
+  "build": {
+    "appId": "com.winread.desktop",
+    "productName": "WinRead",
+    "copyright": "Copyright © 2026 WinRead",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!test/**",
+      "!samples/**",
+      "!*.bat",
+      "!dist/**",
+      "!assets/generate-icon.js"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "sync/*.ps1",
+      "assets/icon.*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "WinRead",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "uninstallDisplayName": "WinRead E-Book Reader",
+      "deleteAppDataOnUninstall": false
+    },
+    "portable": {
+      "artifactName": "${productName}-Portable-${version}.${ext}"
+    }
+  }
+}
