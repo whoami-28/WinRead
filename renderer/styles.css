@@ -81,17 +81,31 @@ body.theme-sepia {
 body.theme-paper {
   --bg-primary: #f5f5f7;
   --bg-secondary: #ececf0;
-  --bg-tertiary: #e1e1e8;
+  --bg-tertiary: #dfdfe6;
   --bg-elevated: #ffffff;
   --bg-card: #ffffff;
-  --border-subtle: #d6d6de;
-  --border-light: #c5c5d2;
-  --text-primary: #1a1a1f;
-  --text-secondary: #5a5a68;
-  --text-muted: #8e8e9e;
-  --accent-amber: #c88126;
-  --reader-bg-color: #f5f5f7;
-  --reader-text-color: #18181c;
+  --border-subtle: #d0d0d8;
+  --border-light: #b8b8c6;
+  --text-primary: #121316;
+  --text-secondary: #4a4a58;
+  --text-muted: #727282;
+  --accent-amber: #b8721c;
+  --accent-gold-btn: #e59d3b;
+  --reader-bg-color: #f7f7f9;
+  --reader-text-color: #121316;
+}
+
+body.theme-paper {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.15), 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+body.theme-paper ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.22);
+}
+
+body.theme-paper ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.38);
 }
 
 /* Font Families */
@@ -374,7 +388,7 @@ body.window-maximized .reader-fullscreen-view {
 }
 .sidebar-item.active {
   background: var(--bg-elevated);
-  color: #ffffff;
+  color: var(--text-primary);
   font-weight: 600;
   box-shadow: inset 0 0 0 1px var(--border-light);
 }
@@ -697,7 +711,7 @@ body.window-maximized .reader-fullscreen-view {
 .hero-book-title {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary);
   font-family: "Charter", "Georgia", serif;
   white-space: nowrap;
   overflow: hidden;
@@ -809,8 +823,9 @@ body.window-maximized .reader-fullscreen-view {
 .status-tab-btn:hover { color: var(--text-primary); }
 .status-tab-btn.active {
   background: var(--bg-elevated);
-  color: #ffffff;
+  color: var(--text-primary);
   font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 .tab-count { font-size: 0.72rem; color: var(--text-muted); }
 .status-tab-btn.active .tab-count { color: var(--accent-amber); }
@@ -865,7 +880,8 @@ body.window-maximized .reader-fullscreen-view {
 }
 .view-toggle-btn.active {
   background: var(--bg-elevated);
-  color: #ffffff;
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 /* Format Chips Row */
@@ -1566,9 +1582,7 @@ body.window-maximized .reader-fullscreen-view {
   background: var(--reader-bg-color);
 }
 .virtual-scroller-sizer {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  pointer-events: none;
+  display: none;
 }
 .virtual-scroller-content {
   position: relative;
@@ -1582,22 +1596,22 @@ body.window-maximized .reader-fullscreen-view {
   line-height: var(--reader-line-height);
 }
 
-.reader-block-container {
-  position: absolute;
-  left: 0; right: 0;
-  margin: 0 auto;
-  max-width: var(--reader-content-width);
-  padding: 0 var(--reader-page-margin);
-  will-change: transform;
+.reader-block-container,
+.reader-block-wrapper {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  display: block;
 }
 .reader-block {
-  margin-bottom: 1em;
+  margin-bottom: 1.15em;
   word-wrap: break-word;
   user-select: text;
 }
-.reader-h1 { font-size: 1.8em; font-weight: 700; margin: 1.2em 0 0.6em 0; color: #ffffff; }
-.reader-h2 { font-size: 1.45em; font-weight: 700; margin: 1.1em 0 0.5em 0; color: #ffffff; }
-.reader-h3 { font-size: 1.2em; font-weight: 600; margin: 0.8em 0 0.4em 0; }
+.reader-h1 { font-size: 1.8em; font-weight: 700; margin: 1.2em 0 0.6em 0; color: var(--reader-text-color); }
+.reader-h2 { font-size: 1.45em; font-weight: 700; margin: 1.1em 0 0.5em 0; color: var(--reader-text-color); }
+.reader-h3 { font-size: 1.2em; font-weight: 600; margin: 0.8em 0 0.4em 0; color: var(--reader-text-color); }
 .reader-blockquote {
   border-left: 3px solid var(--accent-amber);
   padding-left: 14px;
@@ -1652,7 +1666,7 @@ body.window-maximized .reader-fullscreen-view {
 .chapter-end-title {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary);
   font-family: "Charter", "Georgia", serif;
 }
 .chapter-next-btn,
@@ -2016,7 +2030,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 .lang-switch-container {
   display: flex;
-  background: #111317;
+  background: var(--bg-tertiary);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 4px;
@@ -2033,9 +2047,9 @@ input[type="range"]::-webkit-slider-thumb {
   cursor: pointer;
 }
 .lang-pill-btn.active {
-  background: #ffffff;
-  color: #111317;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.16);
 }
 
 .theme-picker-cards {
@@ -2086,8 +2100,16 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .font-choice-btn.active {
   background: var(--bg-elevated);
-  color: #ffffff;
+  color: var(--text-primary);
   font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.16);
+}
+
+body.theme-paper .font-choice-btn.active,
+body.theme-paper .lang-pill-btn.active {
+  background: #ffffff !important;
+  color: #121316 !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18) !important;
 }
 
 .setting-label-row {

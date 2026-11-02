@@ -273,13 +273,17 @@ async function runTests() {
   assert.strictEqual(percentAtBottom, 100, 'End of chapter snaps to 100%');
   console.log('  ✓ Cover, in-book images, and 100% progress snapping verified');
 
+  // Test 9: White Theme Contrast & Typography Flow Refactor Verification
+  console.log('\n[Test 9] White Theme Contrast & Typography Flow Verification...');
+  require('./theme-typography-verification');
+
   // Cleanup temporary test samples
   if (fs.existsSync(samplesDir)) {
     fs.rmSync(samplesDir, { recursive: true, force: true });
   }
 
   console.log('\n========================================');
-  console.log('  ALL 8 TEST SUITES PASSED PERFECTLY!');
+  console.log('  ALL 9 TEST SUITES PASSED PERFECTLY!');
   console.log('========================================\n');
 }
 

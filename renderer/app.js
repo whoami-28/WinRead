@@ -148,14 +148,12 @@ class VirtualScroller {
     this.onPositionChange = onPositionChange;
 
     this.blocks = [];
-    this.prefixSums = [0];
     this.pool = [];
-    this.poolSize = 32;
-    this.activeRange = { start: -1, end: -1 };
-    this.totalHeight = 0;
     this.isScrolling = false;
 
-    this.initPool();
+    if (this.sizer) {
+      this.sizer.style.display = 'none';
+    }
 
     this.boundScroll = () => {
       if (!this.isScrolling) {
@@ -175,90 +173,82 @@ class VirtualScroller {
   }
 
   initPool() {
-    this.content.innerHTML = '';
     this.pool = [];
-    for (let i = 0; i < this.poolSize; i++) {
-      const el = document.createElement('div');
-      el.className = 'reader-block-container';
-      el.style.position = 'absolute';
-      el.style.left = '0';
-      el.style.right = '0';
-      el.style.display = 'none';
-      el.style.willChange = 'transform';
-      this.content.appendChild(el);
-      this.pool.push({
-        element: el,
-        assignedBlockIndex: -1,
-        inUse: false
-      });
-    }
   }
 
   setBlocks(blocks, initialPosition = null) {
-    this.blocks = blocks;
-    this.recalculateHeights();
+    this.blocks = blocks || [];
 
-    for (const item of this.pool) {
-      item.element.style.display = 'none';
-      item.assignedBlockIndex = -1;
-      item.inUse = false;
+    const fragment = document.createDocumentFragment();
+    for (let i = 0; i < this.blocks.length; i++) {
+      const block = this.blocks[i];
+      const el = document.createElement('div');
+      el.className = 'reader-block-wrapper';
+      el.dataset.blockId = block.id || `b_${i}`;
+      el.dataset.chapter = block.chapterIndex !== undefined ? block.chapterIndex : '';
+      el.dataset.paragraph = block.blockIndex !== undefined ? block.blockIndex : i;
+      el.innerHTML = block.html || '';
+
+      const nextJumpBtn = el.querySelector('.chapter-next-btn, .next-chapter-jump-btn');
+      if (nextJumpBtn) {
+        nextJumpBtn.onclick = (e) => {
+          e.stopPropagation();
+          if (window.appInstance) window.appInstance.goToNextChapter();
+        };
+      }
+      const finishJumpBtn = el.querySelector('.chapter-finish-btn, .finish-book-jump-btn');
+      if (finishJumpBtn) {
+        finishJumpBtn.onclick = (e) => {
+          e.stopPropagation();
+          if (window.appInstance) window.appInstance.closeReaderAndShowLibrary();
+        };
+      }
+
+      fragment.appendChild(el);
     }
-    this.activeRange = { start: -1, end: -1 };
+
+    this.content.innerHTML = '';
+    this.content.appendChild(fragment);
 
     if (initialPosition) {
       this.scrollToStructuralPosition(initialPosition);
     } else {
       this.viewport.scrollTop = 0;
-      this.render();
     }
+    this.onScroll();
   }
 
   recalculateHeights() {
-    this.prefixSums = [0];
-    let currentTop = 0;
-
-    for (let i = 0; i < this.blocks.length; i++) {
-      const b = this.blocks[i];
-      const h = b.measuredHeight || b.estimatedHeight || 48;
-      b.top = currentTop;
-      currentTop += h;
-      this.prefixSums.push(currentTop);
-    }
-
-    this.totalHeight = currentTop;
-    this.sizer.style.height = `${Math.max(this.totalHeight, this.viewport.clientHeight)}px`;
+    // Managed natively by DOM document flow
   }
 
   findBlockIndexForOffset(offset) {
-    let low = 0;
-    let high = this.prefixSums.length - 2;
+    if (this.blocks.length === 0) return 0;
+    const children = this.content.children;
+    if (!children || children.length === 0) return 0;
 
-    while (low <= high) {
-      const mid = (low + high) >> 1;
-      const top = this.prefixSums[mid];
-      const bottom = this.prefixSums[mid + 1];
-
-      if (offset >= top && offset < bottom) {
-        return mid;
-      } else if (offset < top) {
-        high = mid - 1;
-      } else {
-        low = mid + 1;
+    let activeIdx = 0;
+    for (let i = 0; i < children.length; i++) {
+      const el = children[i];
+      if (el.offsetTop + el.offsetHeight >= offset) {
+        activeIdx = i;
+        break;
       }
+      activeIdx = i;
     }
-    return Math.max(0, Math.min(this.blocks.length - 1, low));
+    return Math.max(0, Math.min(this.blocks.length - 1, activeIdx));
   }
 
   onScroll() {
     if (this.blocks.length === 0) return;
-    this.render();
 
     const scrollTop = this.viewport.scrollTop;
     const clientHeight = this.viewport.clientHeight;
-    const maxScroll = Math.max(0, this.sizer.offsetHeight - clientHeight);
+    const scrollHeight = this.viewport.scrollHeight;
+    const maxScroll = Math.max(0, scrollHeight - clientHeight);
 
     // Exact progress logic: snap to 100% when at the end of the chapter
-    const isAtBottom = maxScroll <= 5 || (scrollTop >= maxScroll - 25);
+    const isAtBottom = maxScroll <= 5 || (scrollTop >= maxScroll - 20);
     const activeIdx = this.findBlockIndexForOffset(scrollTop + 30);
     const activeBlock = this.blocks[activeIdx];
 
@@ -283,160 +273,54 @@ class VirtualScroller {
   }
 
   render() {
-    if (this.blocks.length === 0) return;
-
-    const scrollTop = this.viewport.scrollTop;
-    const viewportHeight = this.viewport.clientHeight;
-
-    const startVisibleIdx = this.findBlockIndexForOffset(scrollTop);
-    const endVisibleIdx = this.findBlockIndexForOffset(scrollTop + viewportHeight);
-
-    const renderStart = Math.max(0, startVisibleIdx - 2);
-    const renderEnd = Math.min(this.blocks.length - 1, endVisibleIdx + 2);
-
-    this.activeRange = { start: renderStart, end: renderEnd };
-
-    const neededIndices = new Set();
-    for (let i = renderStart; i <= renderEnd; i++) {
-      neededIndices.add(i);
-    }
-
-    // Retain nodes already showing needed blocks
-    for (const item of this.pool) {
-      if (item.assignedBlockIndex !== -1 && neededIndices.has(item.assignedBlockIndex)) {
-        item.inUse = true;
-        neededIndices.delete(item.assignedBlockIndex);
-      } else {
-        item.inUse = false;
-      }
-    }
-
-    // Assign available pool nodes
-    let heightUpdated = false;
-
-    for (const blockIdx of neededIndices) {
-      let poolItem = this.pool.find(p => !p.inUse);
-      if (!poolItem) {
-        const el = document.createElement('div');
-        el.className = 'reader-block-container';
-        el.style.position = 'absolute';
-        el.style.left = '0';
-        el.style.right = '0';
-        el.style.willChange = 'transform';
-        this.content.appendChild(el);
-        poolItem = { element: el, assignedBlockIndex: -1, inUse: true };
-        this.pool.push(poolItem);
-      }
-
-      poolItem.inUse = true;
-      poolItem.assignedBlockIndex = blockIdx;
-      const block = this.blocks[blockIdx];
-
-      poolItem.element.innerHTML = block.html;
-      poolItem.element.style.transform = `translateY(${block.top}px)`;
-      poolItem.element.style.display = 'block';
-      poolItem.element.dataset.blockId = block.id;
-      poolItem.element.dataset.chapter = block.chapterIndex;
-      poolItem.element.dataset.paragraph = block.blockIndex;
-
-      // Handle next chapter action clicks inside scroller
-      const nextJumpBtn = poolItem.element.querySelector('.chapter-next-btn, .next-chapter-jump-btn');
-      if (nextJumpBtn) {
-        nextJumpBtn.onclick = (e) => {
-          e.stopPropagation();
-          if (window.appInstance) window.appInstance.goToNextChapter();
-        };
-      }
-      const finishJumpBtn = poolItem.element.querySelector('.chapter-finish-btn, .finish-book-jump-btn');
-      if (finishJumpBtn) {
-        finishJumpBtn.onclick = (e) => {
-          e.stopPropagation();
-          if (window.appInstance) window.appInstance.closeReaderAndShowLibrary();
-        };
-      }
-
-      const measured = poolItem.element.offsetHeight;
-      if (measured > 0 && Math.abs(measured - (block.measuredHeight || block.estimatedHeight)) > 4) {
-        block.measuredHeight = measured;
-        heightUpdated = true;
-      }
-    }
-
-    // Hide unused pool items
-    for (const item of this.pool) {
-      if (!item.inUse) {
-        item.element.style.display = 'none';
-        item.assignedBlockIndex = -1;
-      }
-    }
-
-    // Re-sum prefix offsets if height changed
-    if (heightUpdated) {
-      this.recalculateHeights();
-      for (const item of this.pool) {
-        if (item.assignedBlockIndex !== -1) {
-          const b = this.blocks[item.assignedBlockIndex];
-          if (b) {
-            item.element.style.transform = `translateY(${b.top}px)`;
-          }
-        }
-      }
-    }
+    this.onScroll();
   }
 
   scrollToStructuralPosition(position) {
     if (!position || this.blocks.length === 0) return;
 
-    let targetIdx = -1;
-    for (let i = 0; i < this.blocks.length; i++) {
-      const b = this.blocks[i];
-      if (b.chapterIndex === position.chapterIndex && b.blockIndex === position.paragraphIndex) {
-        targetIdx = i;
-        break;
+    if (position.paragraphIndex !== undefined && position.paragraphIndex !== null) {
+      const el = this.content.querySelector(`[data-paragraph="${position.paragraphIndex}"]`);
+      if (el) {
+        this.viewport.scrollTop = Math.max(0, el.offsetTop - 16);
+        this.onScroll();
+        return;
       }
     }
 
-    if (targetIdx === -1 && position.chapterIndex !== undefined) {
-      for (let i = 0; i < this.blocks.length; i++) {
-        if (this.blocks[i].chapterIndex === position.chapterIndex) {
-          targetIdx = i;
-          break;
-        }
+    if (position.chapterIndex !== undefined && position.chapterIndex !== null) {
+      const el = this.content.querySelector(`[data-chapter="${position.chapterIndex}"]`);
+      if (el) {
+        this.viewport.scrollTop = Math.max(0, el.offsetTop - 16);
+        this.onScroll();
+        return;
       }
     }
 
-    if (targetIdx === -1 && position.percentage !== undefined && position.percentage > 0) {
-      const maxScroll = Math.max(0, this.sizer.offsetHeight - this.viewport.clientHeight);
+    if (position.percentage !== undefined && position.percentage > 0) {
+      const maxScroll = Math.max(0, this.viewport.scrollHeight - this.viewport.clientHeight);
       this.viewport.scrollTop = (position.percentage / 100) * maxScroll;
-      this.render();
+      this.onScroll();
       return;
     }
 
-    if (targetIdx >= 0 && targetIdx < this.blocks.length) {
-      const targetTop = this.prefixSums[targetIdx] || 0;
-      this.viewport.scrollTop = targetTop;
-      this.render();
-    }
+    this.viewport.scrollTop = 0;
+    this.onScroll();
   }
 
   handleResize() {
     if (this.blocks.length === 0) return;
-    const activeIdx = this.findBlockIndexForOffset(this.viewport.scrollTop);
+    const scrollTop = this.viewport.scrollTop;
+    const activeIdx = this.findBlockIndexForOffset(scrollTop + 30);
     const activeBlock = this.blocks[activeIdx];
 
-    for (const b of this.blocks) {
-      b.measuredHeight = null;
-    }
-    this.recalculateHeights();
-
     if (activeBlock) {
-      this.scrollToStructuralPosition({
-        chapterIndex: activeBlock.chapterIndex,
-        paragraphIndex: activeBlock.blockIndex
-      });
-    } else {
-      this.render();
+      const el = this.content.querySelector(`[data-paragraph="${activeBlock.blockIndex}"]`);
+      if (el) {
+        el.scrollIntoView({ block: 'nearest' });
+      }
     }
+    this.onScroll();
   }
 
   destroy() {
@@ -444,6 +328,7 @@ class VirtualScroller {
     this.content.innerHTML = '';
     this.pool = [];
   }
+}
 }
 
 // ============================================================================
@@ -821,7 +706,7 @@ class WinReadApp {
         const maxScroll = Math.max(0, this.viewportContainer.scrollWidth - this.viewportContainer.clientWidth);
         this.viewportContainer.scrollLeft = (pct / 100) * maxScroll;
       } else {
-        const maxScroll = Math.max(0, this.virtualScrollerSizer.offsetHeight - this.viewportContainer.clientHeight);
+        const maxScroll = Math.max(0, this.viewportContainer.scrollHeight - this.viewportContainer.clientHeight);
         this.viewportContainer.scrollTop = (pct / 100) * maxScroll;
       }
     });
@@ -1388,12 +1273,7 @@ class WinReadApp {
     if (this.isSpreadMode) {
       this.renderSpreadBlocks();
     } else {
-      if (this.virtualScrollerContent) {
-        this.virtualScrollerContent.innerHTML = '';
-      }
-      this.scroller.pool = [];
-      this.scroller.recalculateHeights();
-      this.scroller.render();
+      this.scroller.setBlocks(this.scroller.blocks);
     }
   }
 
