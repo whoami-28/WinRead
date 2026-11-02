@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/whoami-28/WinRead/releases"><img src="https://img.shields.io/badge/Release-v1.1.0-f5a623?style=flat-square" alt="Release v1.1.0" /></a>
+  <a href="https://github.com/whoami-28/WinRead/releases"><img src="https://img.shields.io/badge/Release-v1.2.0-f5a623?style=flat-square" alt="Release v1.2.0" /></a>
   <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-blue?style=flat-square" alt="Platform" />
   <img src="https://img.shields.io/badge/Runtime-Electron%20%2B%20Node.js-1b1c22?style=flat-square" alt="Runtime" />
   <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License" />
@@ -45,8 +45,8 @@
 
 Готовые релизные сборки доступны на странице **[Releases](https://github.com/whoami-28/WinRead/releases)**:
 
-1. **[WinRead Setup 1.1.0.exe](https://github.com/whoami-28/WinRead/releases/download/v1.1.0/WinRead.Setup.1.1.0.exe)** — стандартный установщик Windows (NSIS).
-2. **[WinRead-Portable-1.1.0.exe](https://github.com/whoami-28/WinRead/releases/download/v1.1.0/WinRead-Portable-1.1.0.exe)** — портативная версия, готовая к запуску без установки.
+1. **[WinRead Setup 1.2.0.exe](https://github.com/whoami-28/WinRead/releases/download/v1.2.0/WinRead.Setup.1.2.0.exe)** — стандартный установщик Windows (NSIS).
+2. **[WinRead-Portable-1.2.0.exe](https://github.com/whoami-28/WinRead/releases/download/v1.2.0/WinRead-Portable-1.2.0.exe)** — портативная версия, готовая к запуску без установки.
 
 ---
 
